@@ -1,0 +1,86 @@
+/* Alias màu hệ thống */
+/* --- Material 3 Design System Variables (Light Mode) --- md: material design */
+:root {
+  /* Application style tokens (mirrors values from app/Views/css/style.css) */
+  --bg-color: #0a1a0a;
+  --text-main: #f1f8e9;
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --header-green: #b9f6ca;
+  --header-red: #ff8a80;
+  --input-bg: rgba(255, 255, 255, 0.05);
+  --footer-opacity: 0.2;
+
+  /* Material 3 tokens mapped to application tokens so components can use either set */
+  --md-sys-color-primary: var(--header-green);
+  --md-sys-color-on-primary: var(--bg-color);
+  --md-sys-color-primary-container: rgba(46, 125, 50, 0.12);
+  --md-sys-color-on-primary-container: var(--text-main);
+
+  --md-sys-color-secondary: #A3B087;
+  --md-sys-color-on-secondary: var(--bg-color);
+  --md-sys-color-secondary-container: rgba(67,86,99,0.12);
+  --md-sys-color-on-secondary-container: var(--text-main);
+
+  --md-sys-color-tertiary: #435663;
+  --md-sys-color-on-tertiary: var(--text-main);
+  --md-sys-color-tertiary-container: #A3B087;
+  --md-sys-color-on-tertiary-container: var(--bg-color);
+
+  --md-sys-color-error: #ff5252;
+  --md-sys-color-on-error: #ffffff;
+
+  --md-sys-color-background: var(--bg-color);
+  --md-sys-color-on-background: var(--text-main);
+
+  --md-sys-color-surface: rgba(67,86,99,0.12);
+  --md-sys-color-on-surface: var(--text-main);
+  --md-sys-color-surface-variant: #A3B087;
+  --md-sys-color-on-surface-variant: var(--bg-color);
+
+  --md-sys-color-outline: rgba(255,255,255,0.12);
+
+  --md-sys-color-success: #6fef76;
+  --md-sys-color-warning: #FFA000;
+
+  --md-sys-color-inverse-surface: #ffffff;
+  --md-sys-color-inverse-on-surface: var(--bg-color);
+  --md-sys-color-inverse-primary: var(--header-green);
+
+  /* RGB helper for dynamic effects */
+  --md-sys-color-primary-rgb: 185, 246, 202; /* #b9f6ca */
+
+  /* Fonts: align with app's style.css */
+  --md-sys-font-primary: "Quicksand", sans-serif;
+  --md-sys-font-fallback: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* App aliases to make usage consistent across codebase */
+  --app-bg: var(--bg-color);
+  --app-text: var(--text-main);
+  --app-glass-bg: var(--glass-bg);
+  --app-glass-border: var(--glass-border);
+  --app-input-bg: var(--input-bg);
+  --app-header-green: var(--header-green);
+  --app-header-red: var(--header-red);
+}
+
+/* Light mode overrides - mirrors app/Views/css/style.css .light-mode */
+.light-mode {
+  --bg-color: #f0f4f0;
+  --text-main: #1b301b;
+  --glass-bg: rgba(255, 255, 255, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.8);
+  --header-green: #2e7d32;
+  --header-red: #d32f2f;
+  --input-bg: rgba(255, 255, 255, 0.8);
+  --footer-opacity: 0.5;
+
+  /* Update md tokens for light mode where appropriate */
+  --md-sys-color-primary: var(--header-green);
+  --md-sys-color-on-primary: var(--text-main);
+  --md-sys-color-background: var(--bg-color);
+  --md-sys-color-on-background: var(--text-main);
+  --md-sys-color-on-surface: var(--text-main);
+  --md-sys-color-inverse-surface: #0a1a0a;
+  --md-sys-color-inverse-on-surface: var(--text-main);
+}

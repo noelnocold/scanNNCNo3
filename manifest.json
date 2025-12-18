@@ -1,0 +1,33 @@
+{
+    "name": "Scan code NNC No.3",
+    "short_name": "Scan NNCNo3",
+    "start_url": "./index.html",
+    "scope": "./",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#A2F5FE",
+    "theme_color": "#00789B",
+    "description": "A simple app to scan QR codes and barcodes developed for NNC No.3.",
+    "lang": "vi-VN",
+    "ver": "1.0.9",
+    "icons": [
+        {
+            "src": "./images/icon-94x94.png",
+            "sizes": "94x94",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "./images/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "./images/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}

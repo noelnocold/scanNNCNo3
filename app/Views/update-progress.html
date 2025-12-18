@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Progress</title>
+    <link rel="stylesheet" href="./css/colors.css">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: var(--md-sys-font-primary);
+            text-align: center;
+            padding: 20px;
+            display: flex;
+            /* Sử dụng Flexbox */
+            flex-direction: column;
+            /* Sắp xếp các phần tử theo chiều dọc */
+            align-items: center;
+            /* Căn giữa các phần tử theo chiều ngang */
+            justify-content: center;
+            /* Căn giữa các phần tử theo chiều dọc */
+            min-height: 100vh;
+            /* Đảm bảo chiều cao tối thiểu là toàn màn hình */
+            margin: 0;
+            /* Loại bỏ margin mặc định */
+        }
+
+        #progress-bar {
+            width: 100%;
+            max-width: 400px;
+            /* Giới hạn chiều rộng tối đa */
+            background:var(--md-sys-color-background);
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        #progress-bar div {
+            height: 20px;
+            width: 0;
+            background: var(--md-sys-color-primary);
+            transition: width 0.3s;
+        }
+
+        #file-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            width: 100%;
+            max-width: 400px;
+            /* Giới hạn chiều rộng tối đa */
+        }
+
+        #file-list li {
+            margin: 5px 0;
+            text-align: left;
+            text-align: center;
+            color: var(--md-sys-color-on-primary);
+            /* Căn trái nội dung danh sách */
+        }
+
+        #back-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 100px;
+            /* Pill shape */
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 700;
+            /* Bolder for Noto Sans Mono */
+            transition: box-shadow 0.2s, transform 0.2s, background-color 0.3s ease, color 0.3s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1), 0 1px 1px rgba(0, 0, 0, 0.08);
+            margin: 5px;
+            letter-spacing: 0.5px;
+            /* Slightly more spacing for mono */
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #back-btn:hover {
+            background-color: var(--md-sys-color-primary);
+            /* Hover background */
+            color: var(--md-sys-color-secondary-container);
+            /* Hover text color */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Updating ...</h1>
+    <div id="progress-bar">
+        <div></div>
+    </div>
+    <ul id="file-list"></ul>
+    <button id="back-btn" style="display: none;">Back to Home</button>
+
+    <script src="../../js/update-progress.js"></script>
+</body>
+
+</html>

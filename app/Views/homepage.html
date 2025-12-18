@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Metadata -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan Code app</title>
+
+    <!-- PWA Configuration -->
+    <link rel="manifest" href="../../manifest.json">
+    <link rel="apple-touch-icon" href="../../images/icon-192.png">
+
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
+    <!-- Firebase App (core) -->
+    <!-- <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script> -->
+    <!-- Firebase Database -->
+    <!-- <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script> -->
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="./css/colors.css">
+    <link rel="stylesheet" href="./css/style.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Firebase SDK -->
+    <!-- <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script> -->
+
+    <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.18.6/umd/index.min.js"></script>
+</head>
+
+<body class="flex flex-col items-center p-6 pb-12">
+    <div class="bg-gradient-overlay"></div>
+
+    <div id="theme-btn" class="theme-toggle glass">
+        <span id="theme-icon">🌙</span>
+    </div>
+
+    <div class="noel-decor top-5 left-5 text-6xl rotate-12">🎁</div>
+    <div class="noel-decor bottom-10 right-5 text-7xl -rotate-12">⭐</div>
+
+    <div class="max-w-md w-full space-y-8 mt-12 relative">
+        <header class="text-center space-y-2">
+            <h1 class="text-5xl font-extrabold tracking-tighter transition-colors duration-500">
+                <span style="color: var(--header-green)">Noel</span>
+                <span style="color: var(--header-red)">Vibe</span>
+            </h1>
+            <p class="text-xs font-bold uppercase tracking-[0.4em] opacity-60">Smart Check-in Pro</p>
+        </header>
+
+        <div class="glass p-4">
+            <div class="tabs flex gap-2 justify-center mb-3">
+                <button id="tab-scanner" class="tab-button active py-2 px-4 rounded-xl">Scanner</button>
+                <button id="tab-data" class="tab-button py-2 px-4 rounded-xl">Data</button>
+            </div>
+            <div id="scanner-tab">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center border border-white/20">
+                        <span class="text-2xl">📷</span>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm opacity-80">App loads local CSV and records check-ins locally (persisted to browser).</p>
+                    </div>
+                </div>
+            </div>
+            <div id="data-tab" class="hidden">
+                <div class="flex items-center justify-between mb-3">
+                    <p class="text-sm opacity-80">Dữ liệu từ data-table.csv (local / persisted)</p>
+                    <div class="flex gap-2">
+                        <button id="refresh-data" class="glass py-2 px-3 rounded-xl">Refresh</button>
+                        <button id="download-csv" class="btn-vibrant-red py-2 px-3 rounded-xl">Download CSV</button>
+                    </div>
+                </div>
+                <div id="data-table-container" class="overflow-auto max-h-72">
+                    <!-- Table rendered by JS -->
+                </div>
+            </div>
+        </div>
+
+        <div class="glass p-5 relative overflow-hidden">
+            <div id="video-container">
+                <video id="video"></video>
+                <div class="scanner-laser"></div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-4 gap-4">
+            <button id="start-btn"
+                class="col-span-3 btn-vibrant-red py-5 rounded-[2rem] flex items-center justify-center space-x-3 text-lg uppercase tracking-wider">
+                <span class="text-2xl">⚡</span>
+                <span>Bắt đầu quét</span>
+            </button>
+            <button id="reset-btn"
+                class="col-span-1 glass rounded-[2rem] flex items-center justify-center text-2xl hover:bg-white/20 transition-all">
+                🔄
+            </button>
+        </div>
+
+        <div id="result-container"
+            class="hidden glass p-8 text-center space-y-6 animate-in fade-in slide-in-from-bottom-10 duration-500">
+            <div id="status-icon"
+                class="mx-auto w-24 h-24 rounded-[2.5rem] flex items-center justify-center shadow-2xl relative overflow-hidden">
+            </div>
+
+            <div class="space-y-1">
+                <p class="text-[11px] font-bold uppercase tracking-[0.3em] opacity-70">Mã định danh</p>
+                <h2 id="last-scanned" class="text-4xl font-bold tracking-tight break-all">---</h2>
+            </div>
+
+            <div id="api-status-box"
+                class="w-full py-4 rounded-2xl font-bold text-sm transition-all duration-300 border border-white/10">
+                <span id="api-status">Đang chờ tín hiệu...</span>
+            </div>
+        </div>
+
+        <footer class="text-center pt-4">
+            <p class="text-[10px] font-black uppercase tracking-[0.6em]" style="opacity: var(--footer-opacity)">
+                Vibrant Edition &bull; Festive 2024
+            </p>
+        </footer>
+
+        <!-- js scripts-->
+        <script src="../../js/app.js"></script>
+        <script src="../../js/js-main.js"></script>
+
+    </div>
+</body>
+
+</html>
