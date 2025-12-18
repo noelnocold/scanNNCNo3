@@ -174,9 +174,6 @@ tab.innerHTML = `
                 <button id="close-tab-SYS" class="action-tab-close-SYS" aria-label="Đóng">&times;</button>
             </div>
             <div id="tab-auth">
-                <button id="login-google" type="button">Đăng nhập Google</button>
-                <button id="logout-google" type="button">Đăng xuất</button>
-                <div id="user-info"></div>
             </div>
             <div id="tab-update">
                 <button id="update-sw" type="button">Check for Updates</button>

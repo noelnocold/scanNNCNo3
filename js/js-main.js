@@ -1,12 +1,16 @@
-const codeReader = new ZXing.BrowserMultiFormatReader();
+let codeReader = null;
 const body = document.body;
-const themeBtn = document.getElementById('theme-btn');
-const themeIcon = document.getElementById('theme-icon');
 const startBtn = document.getElementById('start-btn');
 const resetBtn = document.getElementById('reset-btn');
 const resultContainer = document.getElementById('result-container');
 const lastScannedText = document.getElementById('last-scanned');
 const statusIcon = document.getElementById('status-icon');
+const resultOverlay = document.getElementById('result-overlay');
+const resultPopup = document.getElementById('result-popup');
+const popupName = document.getElementById('popup-name');
+const popupCode = document.getElementById('popup-code');
+const popupStatus = document.getElementById('popup-status');
+const popupWelcome = document.getElementById('popup-welcome');
 const dataTableContainer = document.getElementById('data-table-container');
 const tabScanner = document.getElementById('tab-scanner');
 const tabData = document.getElementById('tab-data');
@@ -14,6 +18,12 @@ const scannerTab = document.getElementById('scanner-tab');
 const dataTab = document.getElementById('data-tab');
 const refreshDataBtn = document.getElementById('refresh-data');
 const downloadCsvBtn = document.getElementById('download-csv');
+const manualOverlay = document.getElementById('manual-overlay');
+const manualPopup = document.getElementById('manual-popup');
+const manualCodeInput = document.getElementById('manual-code');
+const manualNameInput = document.getElementById('manual-name');
+const manualSubmitBtn = document.getElementById('manual-submit');
+const manualCancelBtn = document.getElementById('manual-cancel');
 
 let isScanning = false;
 let audioCtx = null;
@@ -25,36 +35,75 @@ function initAudio() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 }
 
+// Initialize ZXing reader from available UMD globals
+function initReader() {
+    if (codeReader) return true;
+    // common UMD globals: ZXing, ZXingBrowser, BrowserMultiFormatReader
+    try {
+        if (window.ZXing && ZXing.BrowserMultiFormatReader) {
+            codeReader = new ZXing.BrowserMultiFormatReader();
+            return true;
+        }
+        if (window.ZXingBrowser && ZXingBrowser.BrowserMultiFormatReader) {
+            codeReader = new ZXingBrowser.BrowserMultiFormatReader();
+            return true;
+        }
+        if (window.BrowserMultiFormatReader) {
+            codeReader = new window.BrowserMultiFormatReader();
+            return true;
+        }
+    } catch (e) {
+        console.warn('ZXing init error', e);
+    }
+    console.warn('ZXing library not found. Ensure <script src="https://unpkg.com/@zxing/library@latest"></script> is loaded before app scripts.');
+    return false;
+}
+
 function playBeep(type) {
     initAudio();
     const oscillator = audioCtx.createOscillator();
     const gainNode = audioCtx.createGain();
     oscillator.connect(gainNode);
     gainNode.connect(audioCtx.destination);
-
+    // richer sounds and vibration patterns per type
+    const now = audioCtx.currentTime;
     if (type === 'success') {
-        oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-        oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.3);
-        if (navigator.vibrate) navigator.vibrate(100);
+        oscillator.type = 'triangle';
+        oscillator.frequency.setValueAtTime(880, now);
+        gainNode.gain.setValueAtTime(0.0001, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.12, now + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
+        oscillator.start(now); oscillator.stop(now + 0.45);
+        try { if (navigator.vibrate) navigator.vibrate([40, 30, 40]); } catch (e) {}
     } else if (type === 'warn') {
-        oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-        oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.5);
-        if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(440, now);
+        gainNode.gain.setValueAtTime(0.0001, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.09, now + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.6);
+        oscillator.start(now); oscillator.stop(now + 0.6);
+        try { if (navigator.vibrate) navigator.vibrate([60, 30, 60]); } catch (e) {}
+    } else if (type === 'error') {
+        oscillator.type = 'square';
+        oscillator.frequency.setValueAtTime(220, now);
+        gainNode.gain.setValueAtTime(0.0001, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.12, now + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+        oscillator.start(now); oscillator.stop(now + 0.55);
+        try { if (navigator.vibrate) navigator.vibrate([120, 40, 120]); } catch (e) {}
     } else {
         oscillator.type = 'sawtooth';
-        oscillator.frequency.setValueAtTime(150, audioCtx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
-        oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.5);
-        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+        oscillator.frequency.setValueAtTime(150, now);
+        gainNode.gain.setValueAtTime(0.0001, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.06, now + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
+        oscillator.start(now); oscillator.stop(now + 0.4);
+        try { if (navigator.vibrate) navigator.vibrate([80, 30, 80]); } catch (e) {}
     }
 }
 
-themeBtn && themeBtn.addEventListener('click', () => {
-    body.classList.toggle('light-mode');
-    if (themeIcon) themeIcon.innerText = body.classList.contains('light-mode') ? '☀️' : '🌙';
-});
+// Light-mode and theme toggle removed — dark mode enforced globally.
+body.classList.remove('light-mode');
 
 // Tabs
 tabScanner && tabScanner.addEventListener('click', () => {
@@ -119,21 +168,93 @@ function renderTable() {
     let html = '<table class="data-table w-full text-sm border-collapse">';
     html += '<thead class="bg-[var(--app-glass-bg)]"><tr>' + keys.map(k => `<th class="px-3 py-2 text-left">${k}</th>`).join('') + '</tr></thead>';
     html += '<tbody>' + dataTable.map(row => {
-        const checked = (row['Checkin'] || '').toLowerCase() === 'true';
+        const checked = !!(row['Checkin'] && String(row['Checkin']).trim());
         return `<tr class="${checked ? 'checked' : ''}">${keys.map(k => `<td class="px-3 py-2 border-t">${row[k] || ''}</td>`).join('')}</tr>`;
     }).join('') + '</tbody>';
     html += '</table>';
     dataTableContainer.innerHTML = html;
 }
 
-function markCheckin(code) {
+function markCheckin(code, providedName) {
     code = String(code).trim();
     const idx = dataTable.findIndex(r => String(r['Code']).trim() === code);
-    if (idx === -1) return false;
-    dataTable[idx]['Checkin'] = 'True';
+    const now = new Date().toLocaleString();
+    if (idx === -1) {
+        // add new row with headers preserved if possible
+        const keys = (dataTable && dataTable[0]) ? Object.keys(dataTable[0]) : ['Code', 'Ten', 'Checkin', 'New'];
+        const newRow = {};
+        keys.forEach(k => {
+            if (k === 'Code') newRow[k] = code;
+            else if (k === 'Checkin') newRow[k] = now;
+            else if (k === 'New') newRow[k] = 'True';
+            else if ((k === 'Ten' || k === 'Name') && providedName) newRow[k] = providedName;
+            else newRow[k] = '';
+        });
+        dataTable.push(newRow);
+        persistData();
+        renderTable();
+        return { status: 'ok', name: providedName || '' };
+    }
+    const name = dataTable[idx]['Ten'] || dataTable[idx]['Name'] || '';
+    const already = !!(dataTable[idx]['Checkin'] && String(dataTable[idx]['Checkin']).trim());
+    if (already) return { status: 'already', name };
+    // if provided name and existing row has empty name, set it
+    if (providedName && (!dataTable[idx]['Ten'] || !String(dataTable[idx]['Ten']).trim())) {
+        if ('Ten' in dataTable[idx]) dataTable[idx]['Ten'] = providedName;
+        else if ('Name' in dataTable[idx]) dataTable[idx]['Name'] = providedName;
+    }
+    dataTable[idx]['Checkin'] = now;
     persistData();
     renderTable();
-    return true;
+    return { status: 'ok', name: providedName || name };
+}
+
+function showPopup({ status, name, code }) {
+    if (!resultOverlay || !resultPopup) return;
+    // populate
+    popupName && (popupName.innerText = name || 'Unknown');
+    popupCode && (popupCode.innerText = code || '---');
+    if (status === 'ok') {
+        popupStatus && (popupStatus.innerText = 'Chúc mừng — Check-in thành công');
+        resultPopup.classList.remove('popup-warn', 'popup-error');
+        resultPopup.classList.add('popup-success');
+        // add success animation
+        resultPopup.classList.remove('pop-animate','pulse-glow','pulse-scale','shake');
+        void resultPopup.offsetWidth; // force reflow
+        resultPopup.classList.add('pop-animate','pulse-glow');
+        playBeep('success');
+    } else if (status === 'already') {
+        popupStatus && (popupStatus.innerText = 'Đã checkin trước đó');
+        resultPopup.classList.remove('popup-success', 'popup-error');
+        resultPopup.classList.add('popup-warn');
+        resultPopup.classList.remove('pop-animate','pulse-glow','pulse-scale','shake');
+        void resultPopup.offsetWidth;
+        resultPopup.classList.add('pop-animate','pulse-scale');
+        playBeep('warn');
+    } else if (status === 'not-found') {
+        popupName && (popupName.innerText = 'Chưa đăng ký');
+        popupStatus && (popupStatus.innerText = 'Mã không khớp với danh sách');
+        resultPopup.classList.remove('popup-success', 'popup-warn');
+        resultPopup.classList.add('popup-error');
+        resultPopup.classList.remove('pop-animate','pulse-glow','pulse-scale','shake');
+        void resultPopup.offsetWidth;
+        resultPopup.classList.add('pop-animate','shake');
+        playBeep('error');
+    }
+    // show
+    resultOverlay.classList.remove('hidden');
+}
+
+function hidePopup() {
+    if (!resultOverlay) return;
+    resultOverlay.classList.add('hidden');
+}
+
+// close when clicking outside popup
+if (resultOverlay) {
+    resultOverlay.addEventListener('click', (e) => {
+        if (e.target === resultOverlay) hidePopup();
+    });
 }
 
 function downloadCSV() {
@@ -177,13 +298,21 @@ startBtn && startBtn.addEventListener('click', () => {
     initAudio();
     // Toggle continuous camera scanning
     if (!isScanning) {
+        // ensure ZXing reader is ready
+        if (!initReader()) {
+            console.warn('Cannot start scanner: ZXing reader not available');
+            // optional: show small UI feedback
+            const apiStatus = document.getElementById('api-status');
+            if (apiStatus) apiStatus.innerText = 'ZXing library missing';
+            return;
+        }
         isScanning = true;
         if (resultContainer) resultContainer.classList.remove('hidden');
         showScanningUI();
         startBtn.innerHTML = "<span class='text-2xl'>⏸</span><span>Tắt Camera</span>";
         startBtn.style.opacity = "1";
 
-        codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
+        codeReader && codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
             if (result) {
                 const code = result.text.trim();
                 const now = Date.now();
@@ -193,12 +322,20 @@ startBtn && startBtn.addEventListener('click', () => {
                 console.log('Scanned code:', code);
                 lastScannedText && (lastScannedText.innerText = code);
                 const ok = markCheckin(code);
-                if (ok) {
-                    showStatusIcon('success');
-                    playBeep('success');
-                } else {
-                    showStatusIcon('error');
-                    playBeep('warn');
+                // ok is an object now
+                if (ok && ok.status) {
+                    if (ok.status === 'ok') {
+                        showStatusIcon('success');
+                        playBeep('success');
+                    } else if (ok.status === 'already') {
+                        showStatusIcon('warn');
+                        playBeep('warn');
+                    } else {
+                        showStatusIcon('error');
+                        playBeep('warn');
+                    }
+                    // show popup with name/code/status
+                    showPopup({ status: ok.status, name: ok.name, code });
                 }
             } else if (err && typeof ZXing !== 'undefined' && !(err instanceof ZXing.NotFoundException)) {
                 console.debug('Decode error:', err);
@@ -214,13 +351,43 @@ startBtn && startBtn.addEventListener('click', () => {
     }
 });
 
+// Open manual input popup on button click
 resetBtn && resetBtn.addEventListener('click', () => {
-    codeReader.reset();
-    isScanning = false;
-    startBtn && (startBtn.innerHTML = "<span class='text-2xl'>⚡</span><span>Bắt đầu quét</span>");
-    startBtn && (startBtn.style.opacity = "1");
-    resultContainer && resultContainer.classList.add('hidden');
-    lastScannedText && (lastScannedText.innerText = "---");
+    if (!manualOverlay || !manualPopup) return;
+    manualOverlay.classList.remove('hidden');
+    // clear inputs
+    manualCodeInput && (manualCodeInput.value = '');
+    manualNameInput && (manualNameInput.value = '');
+    setTimeout(() => { manualCodeInput && manualCodeInput.focus(); }, 50);
+});
+
+// Cancel manual popup
+manualCancelBtn && manualCancelBtn.addEventListener('click', () => {
+    if (manualOverlay) manualOverlay.classList.add('hidden');
+});
+
+// close manual popup when clicking outside
+manualOverlay && manualOverlay.addEventListener('click', (e) => {
+    if (e.target === manualOverlay) manualOverlay.classList.add('hidden');
+});
+
+// Submit manual checkin
+manualSubmitBtn && manualSubmitBtn.addEventListener('click', () => {
+    const code = manualCodeInput ? String(manualCodeInput.value || '').trim() : '';
+    const name = manualNameInput ? String(manualNameInput.value || '').trim() : '';
+    if (!/^\d{10}$/.test(code)) {
+        alert('Mã không hợp lệ. Vui lòng nhập đúng 10 chữ số.');
+        manualCodeInput && manualCodeInput.focus();
+        return;
+    }
+    const res = markCheckin(code, name);
+    if (res && res.status) {
+        if (res.status === 'ok') showStatusIcon('success');
+        else if (res.status === 'already') showStatusIcon('warn');
+        else showStatusIcon('error');
+        showPopup({ status: res.status, name: res.name || name, code });
+    }
+    if (manualOverlay) manualOverlay.classList.add('hidden');
 });
 
 refreshDataBtn && refreshDataBtn.addEventListener('click', async () => { await loadData(); renderTable(); });

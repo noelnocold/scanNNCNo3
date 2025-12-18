@@ -9,17 +9,6 @@
     --footer-opacity: 0.2;
 }
 
-.light-mode {
-    --bg-color: #f0f4f0;
-    --text-main: #1b301b;
-    --glass-bg: rgba(255, 255, 255, 0.6);
-    --glass-border: rgba(255, 255, 255, 0.8);
-    --header-green: #2e7d32;
-    --header-red: #d32f2f;
-    --input-bg: rgba(255, 255, 255, 0.8);
-    --footer-opacity: 0.5;
-}
-
 body {
     font-family: "Quicksand", sans-serif;
     background-color: var(--bg-color);
@@ -40,13 +29,6 @@ body {
         radial-gradient(at 100% 0%, rgba(239, 83, 80, 0.2) 0px, transparent 50%),
         radial-gradient(at 100% 100%, rgba(0, 230, 118, 0.15) 0px, transparent 50%),
         radial-gradient(at 0% 100%, rgba(255, 138, 128, 0.1) 0px, transparent 50%);
-}
-
-.light-mode .bg-gradient-overlay {
-    background-image: radial-gradient(at 0% 0%,
-            rgba(165, 214, 167, 0.4) 0px,
-            transparent 50%),
-        radial-gradient(at 100% 0%, rgba(255, 205, 210, 0.4) 0px, transparent 50%);
 }
 
 .glass {
@@ -133,10 +115,6 @@ body {
     opacity: 0.3;
 }
 
-.light-mode .noel-decor {
-    opacity: 0.6;
-}
-
 /* Tabs and data table styles */
 .tabs {
     display: flex;
@@ -165,3 +143,62 @@ body {
 }
 
 .hidden { display: none !important; }
+
+/* Popup styles */
+#result-overlay {
+    background: rgba(0,0,0,0.72);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+#result-popup {
+    max-width: 90vw;
+    min-width: 60vw;
+    width: 100%;
+    border-radius: 1.25rem;
+    padding: 0;
+    overflow: visible;
+}
+#title-show span{
+    font-family: "Mountains of Christmas", cursive;
+}
+/* status borders and colorful backgrounds */
+#result-popup.popup-success { border: 1px solid rgba(46,125,50,0.25); background: linear-gradient(180deg, rgba(46,125,50,0.08), rgba(46,125,50,0.02)); }
+#result-popup.popup-warn { border: 1px solid rgba(255,193,7,0.25); background: linear-gradient(180deg, rgba(255,193,7,0.06), rgba(255,193,7,0.02)); }
+#result-popup.popup-error { border: 1px solid rgba(244,67,54,0.25); background: linear-gradient(180deg, rgba(244,67,54,0.06), rgba(244,67,54,0.02)); }
+#popup-welcome { transform: rotate(180deg); font-size: 5rem; line-height: 1; letter-spacing: 0.12em; }
+.popup-top { background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent); padding: 1.25rem 1.5rem; }
+.popup-body { background: transparent; padding: 1.5rem 1.5rem 2rem 1.5rem; }
+
+/* Pop-in animation */
+.pop-animate { animation: popIn 420ms cubic-bezier(.2,.9,.2,1); }
+@keyframes popIn {
+    0% { transform: scale(0.8); opacity: 0; filter: blur(6px); }
+    60% { transform: scale(1.04); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; filter: blur(0); }
+}
+
+/* Glow pulse for success */
+.pulse-glow { animation: pulseGlow 1200ms ease-out; }
+@keyframes pulseGlow {
+    0% { box-shadow: 0 0 0 0 rgba(46,125,50,0.3); }
+    70% { box-shadow: 0 0 40px 12px rgba(46,125,50,0.06); }
+    100% { box-shadow: 0 0 0 0 rgba(46,125,50,0); }
+}
+
+/* Shake for error */
+.shake { animation: shakeX 550ms cubic-bezier(.36,.07,.19,.97); }
+@keyframes shakeX {
+    10%, 90% { transform: translateX(-1px); }
+    20%, 80% { transform: translateX(2px); }
+    30%, 50%, 70% { transform: translateX(-4px); }
+    40%, 60% { transform: translateX(4px); }
+}
+
+/* Subtle scale for warn */
+.pulse-scale { animation: pulseScale 700ms ease-out; }
+@keyframes pulseScale { 0% { transform: scale(0.98); } 100% { transform: scale(1); } }
+
+/* Manual popup styles */
+#manual-overlay { background: rgba(0,0,0,0.6); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+#manual-popup input { background: rgba(255,255,255,0.03); color: var(--app-text); }
+#manual-popup .btn-vibrant-red { min-width: 110px; }

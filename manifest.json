@@ -5,11 +5,11 @@
     "scope": "./",
     "display": "standalone",
     "orientation": "portrait",
-    "background_color": "#A2F5FE",
-    "theme_color": "#00789B",
+    "background_color": "#0d4f41",
+    "theme_color": "#0d4f41",
     "description": "A simple app to scan QR codes and barcodes developed for NNC No.3.",
     "lang": "vi-VN",
-    "ver": "1.0.9",
+    "ver": "1.0.3",
     "icons": [
         {
             "src": "./images/icon-94x94.png",
