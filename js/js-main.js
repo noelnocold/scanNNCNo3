@@ -134,24 +134,55 @@ function parseCSV(text) {
 }
 
 async function loadData() {
+    // Legacy behavior: prefer localStorage copy and only fetch network when there is no stored data.
     const stored = localStorage.getItem('dataTable');
     if (stored) {
         try {
             dataTable = JSON.parse(stored);
             return;
         } catch (e) {
-            console.warn('Invalid stored data, reloading CSV');
+            console.warn('Invalid stored data, will reload CSV from network', e);
         }
     }
+
+    // No local copy or invalid — try loading initial CSV from network
     try {
         const resp = await fetch('../data/data-table.csv');
-        const txt = await resp.text();
-        dataTable = parseCSV(txt);
-        persistData();
+        if (resp && resp.ok) {
+            const txt = await resp.text();
+            dataTable = parseCSV(txt);
+            persistData();
+            return;
+        }
     } catch (e) {
-        console.error('Failed to load CSV', e);
-        dataTable = [];
+        console.error('Failed to load CSV from network', e);
     }
+
+    dataTable = [];
+}
+
+// Refresh helper used by UI to explicitly fetch latest CSV from server and overwrite local copy
+async function refreshDataFromNetwork() {
+    const csvUrlBase = '../data/data-table.csv';
+    const cacheBust = '_=' + Date.now();
+    try {
+        const resp = await fetch(csvUrlBase + '?' + cacheBust, { cache: 'no-store' });
+        if (resp && resp.ok) {
+            const txt = await resp.text();
+            const parsed = parseCSV(txt);
+            if (parsed && parsed.length) {
+                dataTable = parsed;
+                persistData();
+                renderTable();
+                console.log('CSV refreshed from network');
+                return true;
+            }
+        }
+        console.warn('Refresh request returned empty or non-OK');
+    } catch (e) {
+        console.warn('Network refresh failed', e);
+    }
+    return false;
 }
 
 function persistData() {
@@ -175,12 +206,18 @@ function renderTable() {
     dataTableContainer.innerHTML = html;
 }
 
-function markCheckin(code, providedName) {
+// markCheckin: attempt to mark a checkin for `code`.
+// If allowAdd === false, do NOT append unknown codes (used for scanning).
+function markCheckin(code, providedName, allowAdd = true) {
     code = String(code).trim();
     const idx = dataTable.findIndex(r => String(r['Code']).trim() === code);
     const now = new Date().toLocaleString();
     if (idx === -1) {
-        // add new row with headers preserved if possible
+        if (!allowAdd) {
+            // caller doesn't want new rows created (scanner flow)
+            return { status: 'not-found', name: providedName || '' };
+        }
+        // add new row with headers preserved if possible (manual flow)
         const keys = (dataTable && dataTable[0]) ? Object.keys(dataTable[0]) : ['Code', 'Ten', 'Checkin', 'New'];
         const newRow = {};
         keys.forEach(k => {
@@ -214,6 +251,11 @@ function showPopup({ status, name, code }) {
     // populate
     popupName && (popupName.innerText = name || 'Unknown');
     popupCode && (popupCode.innerText = code || '---');
+    // adjust welcome/title based on status
+    if (popupWelcome) {
+        if (status === 'not-found') popupWelcome.innerText = 'Not Registered';
+        else popupWelcome.innerText = 'WELCOME';
+    }
     if (status === 'ok') {
         popupStatus && (popupStatus.innerText = 'Chúc mừng — Check-in thành công');
         resultPopup.classList.remove('popup-warn', 'popup-error');
@@ -313,7 +355,7 @@ startBtn && startBtn.addEventListener('click', () => {
         startBtn.style.opacity = "1";
 
         codeReader && codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
-            if (result) {
+                if (result) {
                 const code = result.text.trim();
                 const now = Date.now();
                 if (code === lastDetected && (now - lastDetectedAt) < 3000) return; // ignore duplicate within 3s
@@ -321,7 +363,8 @@ startBtn && startBtn.addEventListener('click', () => {
                 lastDetectedAt = now;
                 console.log('Scanned code:', code);
                 lastScannedText && (lastScannedText.innerText = code);
-                const ok = markCheckin(code);
+                // When scanning, do not auto-add unknown codes; allowAdd = false
+                const ok = markCheckin(code, undefined, false);
                 // ok is an object now
                 if (ok && ok.status) {
                     if (ok.status === 'ok') {
@@ -330,9 +373,12 @@ startBtn && startBtn.addEventListener('click', () => {
                     } else if (ok.status === 'already') {
                         showStatusIcon('warn');
                         playBeep('warn');
-                    } else {
-                        showStatusIcon('error');
-                        playBeep('warn');
+                        } else if (ok.status === 'not-found') {
+                            showStatusIcon('error');
+                            playBeep('warn');
+                        } else {
+                            showStatusIcon('error');
+                            playBeep('warn');
                     }
                     // show popup with name/code/status
                     showPopup({ status: ok.status, name: ok.name, code });
@@ -390,7 +436,14 @@ manualSubmitBtn && manualSubmitBtn.addEventListener('click', () => {
     if (manualOverlay) manualOverlay.classList.add('hidden');
 });
 
-refreshDataBtn && refreshDataBtn.addEventListener('click', async () => { await loadData(); renderTable(); });
+refreshDataBtn && refreshDataBtn.addEventListener('click', async () => {
+    const ok = await refreshDataFromNetwork();
+    if (!ok) {
+        // fallback: ensure we at least load stored data
+        await loadData();
+        renderTable();
+    }
+});
 downloadCsvBtn && downloadCsvBtn.addEventListener('click', downloadCSV);
 
 // Initialize

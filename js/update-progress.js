@@ -40,5 +40,5 @@ navigator.serviceWorker.addEventListener('message', event => {
 
 // Quay lại giao diện chính
 backBtn.addEventListener('click', () => {
-    window.location.href = '/app/Views/homepage.html';
+    window.location.href = './homepage.html';
 });
