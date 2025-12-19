@@ -8,7 +8,8 @@ const urlsToCache = [
     './js/js-main.js',
     './images/icon-192x192.png',
     './images/icon-512x512.png',
-    './manifest.json'
+    './manifest.json',
+    './app/data/data-table.csv',
 ];
 
 // Sự kiện install:

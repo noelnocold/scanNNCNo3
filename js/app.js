@@ -224,5 +224,5 @@ document.addEventListener('click', (e) => {
 // Preserve update button behavior (in test this will navigate if the path exists)
 const updateBtn = tab.querySelector('#update-sw');
 updateBtn.addEventListener('click', () => {
-    window.location.href = '/app/Views/update-progress.html';
+    window.location.href = './update-progress.html';
 });
