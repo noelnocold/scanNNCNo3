@@ -421,11 +421,39 @@ manualOverlay && manualOverlay.addEventListener('click', (e) => {
 manualSubmitBtn && manualSubmitBtn.addEventListener('click', () => {
     const code = manualCodeInput ? String(manualCodeInput.value || '').trim() : '';
     const name = manualNameInput ? String(manualNameInput.value || '').trim() : '';
-    if (!/^\d{10}$/.test(code)) {
-        alert('Mã không hợp lệ. Vui lòng nhập đúng 10 chữ số.');
+    // Validation: accept either full 10-digit code OR 4-digit short code (only when name provided)
+    const isFull = /^\d{10}$/.test(code);
+    const isShortWithName = /^\d{4}$/.test(code) && name;
+    if (!isFull && !isShortWithName) {
+        alert('Mã không hợp lệ. Nhập 10 chữ số hoặc 4 chữ số cùng tên.');
         manualCodeInput && manualCodeInput.focus();
         return;
     }
+
+    if (isShortWithName) {
+        // Do NOT create new CSV rows for short-code manual check-in.
+        // Find existing row whose Code contains the 4-digit input (or matches).
+        const idx = dataTable.findIndex(r => String(r['Code'] || '').includes(code));
+        if (idx !== -1) {
+            const fullCode = String(dataTable[idx]['Code']).trim();
+            const res = markCheckin(fullCode, name, false); // do not add new
+            if (res && res.status) {
+                if (res.status === 'ok') showStatusIcon('success');
+                else if (res.status === 'already') showStatusIcon('warn');
+                else showStatusIcon('error');
+                showPopup({ status: res.status, name: res.name || name, code: fullCode });
+            }
+        } else {
+            // not found — do not add automatically
+            showStatusIcon('error');
+            playBeep('warn');
+            showPopup({ status: 'not-found', name: name, code });
+        }
+        if (manualOverlay) manualOverlay.classList.add('hidden');
+        return;
+    }
+
+    // Full code flow (existing behavior — may create new row)
     const res = markCheckin(code, name);
     if (res && res.status) {
         if (res.status === 'ok') showStatusIcon('success');

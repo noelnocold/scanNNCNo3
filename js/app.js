@@ -54,7 +54,7 @@ if ('serviceWorker' in navigator) {
                     top: 80px;
                     left: 32px;
                     z-index: 1001;
-                    background: var(--md-sys-color-surface); /* Màu nền bề mặt */
+                    background: var(--bg-color); /* Màu nền bề mặt */
                     color: var(--md-sys-color-on-surface); /* Màu nội dung trên bề mặt */
                     border-radius: 12px;
                     box-shadow: 0 2px 16px rgba(0, 0, 0, 0.18);
